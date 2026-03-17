@@ -90,7 +90,32 @@ jobs:
       - name: Organize Output
         run: |
           mkdir -p include
-          rsync -amv --include=*/ --include=*.h --include=*.hpp --exclude=* webrtc/src/ include/
+          rsync -amv --include='*/' \
+            --include='*.h' \
+            --include='*.hpp' \
+            --include='*.inc' \
+            --include='*.def' \
+            --exclude='*' webrtc/src/ include/
+
+          if [ -d "src/out/Release/gen" ]; then
+            echo "Extracting generated headers..."
+            rsync -amv --include='*/' \
+              --include='*.h' \
+              --include='*.inc' \
+              --exclude='*' webrtc/src/out/Release/gen/ include/
+          fi
+
+          echo "🧹 Cleaning up test files and examples..."
+          find include -type f \( \
+            -name "*unittest*" \
+            -o -name "*_test.h" \
+            -o -name "*_test.inc" \
+            -o -path "*/test/*" \
+            -o -path "*/examples/*" \
+            -o -path "*/testing/*" \
+          \) -delete
+          find include -type d -empty -delete
+
           mkdir -p lib
           cp webrtc/src/out/Release/obj/libwebrtc.a lib/
 
