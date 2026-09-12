@@ -1,6 +1,6 @@
-# Native-WebRTC-Build
+# libwebrtc-builder
 
-This repository provides an automated way to build the native WebRTC library for the ARM64 platform using GitHub Actions. The primary purpose of this build is to support my project, [RaspberryPi-WebRTC](https://github.com/TzuHuanTai/RaspberryPi-WebRTC).
+This repository provides an automated way to build the native WebRTC library for the ARM64 platform using GitHub Actions. The primary purpose of this build is to support the [pi-webrtc](https://github.com/mazupo/pi-webrtc) project.
 
 ## Release Artifacts
 
@@ -10,7 +10,7 @@ Each successful build produces a release containing the following artifact:
   - WebRTC header files (`include/*.h`)
   - WebRTC static library (`lib/libwebrtc.a`)
 
-You can download the latest release from the [Releases](https://github.com/TzuHuanTai/Native-WebRTC-Build/releases) page.
+You can download the latest release from the [Releases](https://github.com/mazupo/libwebrtc-builder/releases) page.
 
 ## Usage
 
