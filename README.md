@@ -1,5 +1,7 @@
 # libwebrtc-builder
 
+[![libwebrtc](https://img.shields.io/github/v/release/mazupo/libwebrtc-builder?label=libwebrtc%20branch)](https://github.com/mazupo/libwebrtc-builder/releases)
+
 This repository provides an automated way to build the native WebRTC library for the ARM64 platform using GitHub Actions. The primary purpose of this build is to support the [pi-webrtc](https://github.com/mazupo/pi-webrtc) project.
 
 ## Release Artifacts
