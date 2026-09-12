@@ -110,6 +110,7 @@ jobs:
       - name: Setup Depot Tools
         run: |
           git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          ./depot_tools/ensure_bootstrap
           echo "PATH=$PATH:$(pwd)/depot_tools" >> $GITHUB_ENV
 
       - name: Check PATH
