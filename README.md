@@ -56,6 +56,7 @@ gn gen out/Release --args="
 
 ## Version Management
 
-WebRTC versions are managed based on the releases listed on [Chromium Dash](https://chromiumdash.appspot.com/branches). When a new version is released, a corresponding tag is created in this repository.
+WebRTC versions follow the branches listed on [Chromium Dash](https://chromiumdash.appspot.com/branches).
 
-Once the tag is pushed to GitHub, it triggers the GitHub Actions workflow to start the build process. After the build completes, an automatic release is generated containing the compiled WebRTC artifacts.
+The build workflow runs automatically. It reads the branched milestones from Chromium Dash and picks the **second newest** WebRTC branch (the newest one is usually being stabilized).
+

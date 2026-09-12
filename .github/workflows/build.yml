@@ -1,13 +1,81 @@
-name: Build WebRTC
+name: Build libwebrtc
 
 on:
   push:
     tags:
       - "*"
+  schedule:
+    # Every Monday at 04:00 UTC
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      webrtc_branch:
+        description: "WebRTC branch to build (e.g. 8010). Leave empty to auto-detect."
+        required: false
+        type: string
+      force:
+        description: "Build even if a release for that branch already exists."
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
 
 jobs:
-  build-and-release:
+  resolve-version:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.pick.outputs.version }}
+      should_build: ${{ steps.pick.outputs.should_build }}
+
+    steps:
+      - name: Resolve WebRTC branch
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_BRANCH: ${{ inputs.webrtc_branch }}
+          INPUT_FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Tag push: build exactly what was tagged.
+            echo "version=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          VERSION="${INPUT_BRANCH:-}"
+          if [ -z "$VERSION" ]; then
+            # Take the second newest branched milestone: the newest one is still
+            # being stabilized. Old milestones name their branch "m79" instead of a
+            # number, so keep only the numeric ones before sorting.
+            VERSION=$(curl -sSf "https://chromiumdash.appspot.com/fetch_milestones?only_branched=true" \
+              | jq -r '[.[] | select((.webrtc_branch // "") | test("^[0-9]+$"))]
+                       | sort_by(.milestone) | reverse | .[1].webrtc_branch')
+          fi
+
+          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+            echo "::error::Could not determine a WebRTC branch from Chromium Dash"
+            exit 1
+          fi
+          echo "Selected WebRTC branch: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          if [ "${INPUT_FORCE:-false}" != "true" ] && gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists, nothing to do."
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-release:
+    needs: resolve-version
+    if: needs.resolve-version.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    env:
+      WEBRTC_VERSION: ${{ needs.resolve-version.outputs.version }}
 
     steps:
       - name: Free up disk space on runner
@@ -37,8 +105,7 @@ jobs:
 
       - name: Test Remote Connection
         run: |
-          WEBRTC_VERSION="${{ github.ref_name }}"
-          git ls-remote https://webrtc.googlesource.com/src refs/branch-heads/$WEBRTC_VERSION
+          git ls-remote --exit-code https://webrtc.googlesource.com/src refs/branch-heads/$WEBRTC_VERSION
 
       - name: Setup Depot Tools
         run: |
@@ -50,7 +117,6 @@ jobs:
 
       - name: Clone WebRTC source
         run: |
-          WEBRTC_VERSION="${{ github.ref_name }}"
           mkdir webrtc
           cd webrtc
           fetch --nohooks webrtc
@@ -126,4 +192,6 @@ jobs:
       - name: Upload Release to GitHub
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.WEBRTC_VERSION }}
+          name: ${{ env.WEBRTC_VERSION }}
           files: libwebrtc-arm64.tar.gz
