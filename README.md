@@ -60,3 +60,7 @@ WebRTC versions follow the branches listed on [Chromium Dash](https://chromiumda
 
 The build workflow runs automatically. It reads the branched milestones from Chromium Dash and picks the **second newest** WebRTC branch (the newest one is usually being stabilized).
 
+## License
+
+The build scripts in this repository are licensed under the [Apache License 2.0](LICENSE).
+
