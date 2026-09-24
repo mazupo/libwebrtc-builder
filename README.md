@@ -48,11 +48,11 @@ gn gen out/Release --args="
     rtc_build_examples=false
     is_component_build=false
     is_component_ffmpeg=true
-    ffmpeg_branding=\"Chrome\"
-    proprietary_codecs=true
     clang_use_chrome_plugins=false
 "
 ```
+
+`rtc_use_h264` brings in OpenH264 and the FFmpeg-based H.264 decoder. `is_component_ffmpeg` builds FFmpeg as a separate shared library, so it is not part of `libwebrtc.a`.
 
 ### Patches
 
