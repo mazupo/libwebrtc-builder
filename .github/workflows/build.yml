@@ -181,6 +181,8 @@ jobs:
         run: |
           cd webrtc/src
           mkdir -p out/Release
+          # rtc_use_h264 pulls in //third_party/ffmpeg for the H.264 decoder;
+          # is_component_ffmpeg builds it as a separate .so, so it stays out of libwebrtc.a.
           gn gen out/Release --args="
               target_os=\"linux\" 
               target_cpu=\"arm64\"
@@ -196,9 +198,7 @@ jobs:
               rtc_build_tools=false 
               rtc_build_examples=false 
               is_component_build=false 
-              is_component_ffmpeg=true 
-              ffmpeg_branding=\"Chrome\" 
-              proprietary_codecs=true 
+              is_component_ffmpeg=true
               clang_use_chrome_plugins=false"
           ninja -C out/Release
 
