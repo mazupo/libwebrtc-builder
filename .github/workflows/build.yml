@@ -175,7 +175,7 @@ jobs:
             bash "$patch"
           done
 
-      - name: Build WebRTC
+      - name: Configure WebRTC
         env:
           PATH: ${{ env.PATH }}
         run: |
@@ -200,7 +200,20 @@ jobs:
               is_component_build=false 
               is_component_ffmpeg=true
               clang_use_chrome_plugins=false"
-          ninja -C out/Release
+
+      - name: Check third-party libraries
+        env:
+          PATH: ${{ env.PATH }}
+        run: |
+          cd webrtc/src
+          python3 "$GITHUB_WORKSPACE/scripts/check_third_party.py" out/Release \
+            --notice "$GITHUB_WORKSPACE/NOTICE" \
+            --output "$GITHUB_WORKSPACE/third_party_libs.txt"
+
+      - name: Build WebRTC
+        env:
+          PATH: ${{ env.PATH }}
+        run: ninja -C webrtc/src/out/Release
 
       - name: Organize Output
         run: |
@@ -236,7 +249,7 @@ jobs:
 
       - name: Create release
         run: |
-          tar -czvf libwebrtc-arm64.tar.gz include lib
+          tar -czvf libwebrtc-arm64.tar.gz include lib LICENSE NOTICE
 
       - name: Upload Release to GitHub
         uses: softprops/action-gh-release@v2

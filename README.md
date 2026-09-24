@@ -11,6 +11,8 @@ Each successful build produces a release containing the following artifact:
 - **libwebrtc-arm64.tar.gz**
   - WebRTC header files (`include/*.h`)
   - WebRTC static library (`lib/libwebrtc.a`)
+  - License of this repository (`LICENSE`)
+  - Third-party notices (`NOTICE`)
 
 You can download the latest release from the [Releases](https://github.com/mazupo/libwebrtc-builder/releases) page.
 
@@ -67,4 +69,6 @@ The build workflow runs automatically. It reads the branched milestones from Chr
 ## License
 
 The build scripts in this repository are licensed under the [Apache License 2.0](LICENSE).
+
+The release packages contain WebRTC and the third-party libraries compiled into `libwebrtc.a`, each under its own license. See [NOTICE](NOTICE).
 
