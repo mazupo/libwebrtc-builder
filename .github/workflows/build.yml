@@ -78,6 +78,9 @@ jobs:
       WEBRTC_VERSION: ${{ needs.resolve-version.outputs.version }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Free up disk space on runner
         run: |
           echo "Before cleanup:"
@@ -161,6 +164,16 @@ jobs:
           git checkout branch-heads/$WEBRTC_VERSION
           git clean -df
           gclient sync -D --force --reset --with_branch_heads --no-history
+
+      - name: Patch WebRTC
+        run: |
+          # Runs every script in patches/; drop a patch by deleting its script.
+          shopt -s nullglob
+          cd webrtc/src
+          for patch in "$GITHUB_WORKSPACE"/patches/*.sh; do
+            echo "Applying $(basename "$patch")"
+            bash "$patch"
+          done
 
       - name: Build WebRTC
         env:

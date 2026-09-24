@@ -54,6 +54,10 @@ gn gen out/Release --args="
 "
 ```
 
+### Patches
+
+Before the build, every script in [`patches/`](patches) runs in the WebRTC checkout (`webrtc/src`), in alphabetical order. To drop a patch once it is no longer needed, delete its script; the workflow does not need to change.
+
 ## Version Management
 
 WebRTC versions follow the branches listed on [Chromium Dash](https://chromiumdash.appspot.com/branches).
