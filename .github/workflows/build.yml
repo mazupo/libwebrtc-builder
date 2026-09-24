@@ -218,7 +218,13 @@ jobs:
       - name: Organize Output
         run: |
           mkdir -p include
-          rsync -amv --include='*/' \
+          # Ship headers only for WebRTC and the third_party libraries bundled into libwebrtc.a.
+          excludes=(--exclude='/build/' --exclude='/buildtools/' --exclude='/tools/')
+          for dir in webrtc/src/third_party/*/; do
+            lib="third_party/$(basename "$dir")"
+            grep -qx "$lib" third_party_libs.txt || excludes+=(--exclude="/$lib/")
+          done
+          rsync -amv "${excludes[@]}" --include='*/' \
             --include='*.h' \
             --include='*.hpp' \
             --include='*.inc' \
