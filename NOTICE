@@ -122,6 +122,11 @@ texts that the entries refer to are reproduced at the end of this file.
     - Copyright (c) 2003-2004, Mark Borgerding
     - https://github.com/xiph/rnnoise/blob/main/COPYING
 
+21. SFrame (third_party/sframe)
+    - License: BSD-2-Clause
+    - Copyright (c) 2020, Cisco Systems
+    - https://github.com/cisco/sframe
+
 ------------------------------------------------------------------------------
 License texts
 ------------------------------------------------------------------------------
