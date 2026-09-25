@@ -5,6 +5,7 @@ Run from the WebRTC checkout (webrtc/src) after `gn gen`; nothing needs to be bu
 """
 
 import argparse
+import glob
 import re
 import subprocess
 import sys
@@ -55,6 +56,13 @@ def main():
         print("NOTICE does not list these bundled libraries:", file=sys.stderr)
         for lib in missing:
             print(f"  {lib}", file=sys.stderr)
+        # Print what each library ships so its NOTICE entry can be written from it.
+        for lib in missing:
+            for path in sorted(glob.glob(f"{lib}/README.chromium") + glob.glob(f"{lib}/LICENSE*")
+                               + glob.glob(f"{lib}/COPYING*") + glob.glob(f"{lib}/src/LICENSE*")):
+                print(f"\n==> {path} <==", file=sys.stderr)
+                with open(path, errors="replace") as f:
+                    print(f.read(), file=sys.stderr)
         return 1
 
     print(f"NOTICE covers all {len(libs)} bundled third_party libraries:")
