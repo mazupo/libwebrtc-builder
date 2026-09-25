@@ -158,12 +158,15 @@ jobs:
         run: |
           mkdir webrtc
           cd webrtc
-          fetch --nohooks webrtc
-          cd src
-          git fetch origin refs/branch-heads/$WEBRTC_VERSION:refs/heads/branch-heads/$WEBRTC_VERSION
-          git checkout branch-heads/$WEBRTC_VERSION
-          git clean -df
-          gclient sync -D --force --reset --with_branch_heads --no-history
+          # Sync the branch in one pass without history; `fetch webrtc` would first clone
+          # main and every dependency with full history, then sync the branch on top.
+          gclient config --name src --unmanaged https://webrtc.googlesource.com/src.git
+          gclient sync --nohooks --no-history --with_branch_heads \
+            --revision "src@refs/branch-heads/$WEBRTC_VERSION"
+          # The test resources hook downloads audio/video files only tests use
+          # (rtc_include_tests=false); without their .sha1 stubs it has nothing to fetch.
+          find src/resources -name '*.sha1' -delete
+          gclient runhooks
 
       - name: Patch WebRTC
         run: |
