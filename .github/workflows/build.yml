@@ -18,6 +18,11 @@ on:
         required: false
         default: false
         type: boolean
+      dry_run:
+        description: "Build without publishing a release. Runs outside main never publish."
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -28,6 +33,7 @@ jobs:
     outputs:
       version: ${{ steps.pick.outputs.version }}
       should_build: ${{ steps.pick.outputs.should_build }}
+      publish: ${{ steps.pick.outputs.publish }}
 
     steps:
       - name: Resolve WebRTC branch
@@ -36,15 +42,28 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           INPUT_BRANCH: ${{ inputs.webrtc_branch }}
           INPUT_FORCE: ${{ inputs.force }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
 
           if [ "${{ github.event_name }}" = "push" ]; then
             # Tag push: build exactly what was tagged.
-            echo "version=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "version=${{ github.ref_name }}"
+              echo "should_build=true"
+              echo "publish=true"
+            } >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
+          # Only main publishes; a dry run or a run from another branch just builds.
+          if [ "${INPUT_DRY_RUN:-false}" != "true" ] && [ "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH" ]; then
+            PUBLISH=true
+          else
+            PUBLISH=false
+          fi
+          echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
 
           VERSION="${INPUT_BRANCH:-}"
           if [ -z "$VERSION" ]; then
@@ -63,7 +82,10 @@ jobs:
           echo "Selected WebRTC branch: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          if [ "${INPUT_FORCE:-false}" != "true" ] && gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          if [ "$PUBLISH" != "true" ]; then
+            echo "::notice::Building $VERSION without publishing a release."
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          elif [ "${INPUT_FORCE:-false}" != "true" ] && gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release $VERSION already exists, nothing to do."
             echo "should_build=false" >> "$GITHUB_OUTPUT"
           else
@@ -260,7 +282,16 @@ jobs:
         run: |
           tar -czvf libwebrtc-arm64.tar.gz include lib LICENSE NOTICE
 
+      - name: Upload build artifact
+        if: needs.resolve-version.outputs.publish != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: libwebrtc-${{ env.WEBRTC_VERSION }}-arm64
+          path: libwebrtc-arm64.tar.gz
+          retention-days: 1
+
       - name: Upload Release to GitHub
+        if: needs.resolve-version.outputs.publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.WEBRTC_VERSION }}
